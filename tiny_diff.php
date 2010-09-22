@@ -99,8 +99,12 @@ class Tiny_diff
 	}
 
 	/**
-	 * Diff function
+	 * Diff function. Contributed by Dan Horrigan who again took it from
+	 * Paul Butler.
 	 * 
+	 * @author Paul Butler
+	 * @link http://github.com/paulgb/simplediff/blob/master/simplediff.php
+	 *
 	 * @access private
 	 * @param string $old The old block of data
 	 * @param string $new The new block of data
