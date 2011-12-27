@@ -1,5 +1,7 @@
 <?php
 /**
+ * Modified by Emiliano Burgos.
+ *
  * Tiny diff is, as the name already suggests, a small PHP class that can create a diff without having to rely on any external libraries or utilities. Thanks to Dan Horrigan for helping me out with this class
  *
  * @author Yorick Peterse
@@ -33,6 +35,15 @@
 class Tiny_diff
 {
 	/**
+	 * 
+	 */
+	public static $markers = array(
+		'mixed' 	=> array('ins_beg' => '<ins>+ ' , 'ins_end' => '</ins>PHP_EOL' ,'del_beg' => '<del>- ', 'del_end' => "</del>PHP_EOL" )
+		,'html'		=> array('ins_beg' => '<ins> ' , 'ins_end' => '</ins>PHP_EOL' ,'del_beg' => '<del> ', 'del_end' => "</del>PHP_EOL" )
+		,'normal' 	=> array('ins_beg' => '//>> + start diff' , 'ins_end' => 'PHP_EOL//<< + end diff' ,'del_beg' => '//>> - start diff ', 'del_end' => "PHP_EOL//<< - end diff" )
+		);
+		
+	/**
 	 * Compare two strings and return the difference
 	 *
 	 * @access public
@@ -43,39 +54,14 @@ class Tiny_diff
 	 */
 	public function compare($old, $new, $mode = 'normal')
 	{
-		// Mixed
-		if ( $mode === 'mixed')
-		{
-			// Insert characters
-			$ins_begin 	= '<ins>+ ';
-			$ins_end 	= '</ins>' . PHP_EOL;
+		
+		// Insert characters
+		$ins_end 	= $this->_get_marker($mode,'ins_end');
+		$ins_begin 	= $this->_get_marker($mode,'ins_beg');
 
-			// Delete characters
-			$del_begin 		= '<del>- ';
-			$del_end		= '</del>' . PHP_EOL;
-		}
-		// HTML mode
-		elseif ( $mode === 'html' )
-		{
-			// Insert characters
-			$ins_begin 	= '<ins>';
-			$ins_end 	= '</ins>' . PHP_EOL;
-
-			// Delete characters
-			$del_begin 		= '<del>';
-			$del_end		= '</del>' . PHP_EOL;
-		}
-		// Normal mode
-		else
-		{
-			// Insert characters
-			$ins_begin 	= '+ ';
-			$ins_end 	= PHP_EOL;
-
-			// Delete characters
-			$del_begin 		= '- ';
-			$del_end		= PHP_EOL;
-		}
+		// Delete characters
+		$del_end	= $this->_get_marker($mode,'del_end');
+		$del_begin 	= $this->_get_marker($mode,'del_beg');
 
 		// Turn the strings into an array so it's a bit easier to parse them
 		$diff	= $this->diff(explode(PHP_EOL, $old), explode(PHP_EOL, $new));
@@ -85,12 +71,12 @@ class Tiny_diff
 		{
 			if(is_array($line))
 			{
-				$result .= !empty($line['del']) ? $del_begin . implode(PHP_EOL, $line['del']) . $del_end : '';
-				$result .= !empty($line['ins']) ? $ins_begin . implode(PHP_EOL, $line['ins']) . $ins_end : '';
+				$result .= !empty($line['del']) ? $del_begin.implode(PHP_EOL, $line['del']).$del_end : '';
+				$result .= !empty($line['ins']) ? $ins_begin.implode(PHP_EOL, $line['ins']).$ins_end : '';
 			}
 			else
 			{
-				$result .= $line . PHP_EOL;
+				$result .= $line.PHP_EOL;
 			}
 		}
 
@@ -106,10 +92,10 @@ class Tiny_diff
 	 * @link http://github.com/paulgb/simplediff/blob/master/simplediff.php
 	 *
 	 * @access private
-	 * @param string $old The old block of data
-	 * @param string $new The new block of data
+	 * @param mixed $old The old block of data
+	 * @param mixed $new The new block of data
 	 */
-	private function diff($old, $new)
+	public function diff($old, $new)
 	{
 		$maxlen = 0;
 		// Go through each old line.
@@ -139,5 +125,14 @@ class Tiny_diff
 				array_slice($new, $new_max, $maxlen),
 				self::diff(array_slice($old, $old_max + $maxlen), array_slice($new, $new_max + $maxlen))
 			);
+	}
+	
+	/**
+	 * @param 	string $mode Mode id
+	 * @param	string $id	 Marker id.
+	 */
+	private function _get_marker($mode,$pos)
+	{
+		return strtr(self::$markers[$mode][$pos],array('PHP_EOL' => PHP_EOL));
 	}
 }
